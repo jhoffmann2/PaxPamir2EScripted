@@ -1,0 +1,43 @@
+﻿
+<Panel
+        id="table_confirm_board_reset"
+        offsetXY="0 0"
+        active="false"
+        rectAlignment="MiddleCenter"
+        width="512"
+        height="504"
+        image="gui_confirm_background"
+        allowDragging="false"
+        returnToOriginalPositionWhenReleased="false"
+>
+    <Text
+            id="confirm_text"
+            offsetXY="0 -90"
+            width="450"
+            height="256"
+            fontSize="36"
+            color="#EEEEEE"
+    >This will reset all coalition blocks.  Are you sure?</Text>
+    <Button
+            id="reset_confirm_yes"
+            offsetXY="-20 -190"
+            width="150"
+            height="70"
+            onClick="resetBoard"
+            fontSize="32"
+            colors="#D3C69A|#EDDCAF|#C6BA91|#555555"
+            textColor="#000000"
+    >Reset Now
+    </Button>
+    <Button
+            id="cancel_reset"
+            offsetXY="160 -190"
+            width="150"
+            height="70"
+            onClick="cancelResetBoard"
+            fontSize="32"
+            colors="#E8E8E8|#F4F4F4|#D8D8D8|#555555"
+            textColor="#000000"
+    >Cancel
+    </Button>
+</Panel>
