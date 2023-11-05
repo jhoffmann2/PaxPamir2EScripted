@@ -506,7 +506,13 @@ function ProxyObject(object)
   end
   
   function mt.__eq(t1, t2)
-    return t1.ttsObject == t2.ttsObject
+    if type(t1) == 'ProxyObject' then
+      t1 = t1.ttsObject
+    end
+    if type(t2) == 'ProxyObject' then
+      t2 = t2.ttsObject
+    end
+    return t1 == t2
   end
 
   return setmetatable(mt.self, mt)

@@ -1,6 +1,13 @@
-﻿local RelativePosition = Vector(-0.31, 2.00, -15.24) - Vector(-0.31, 0.96, -19.79)
-local Scale = Vector(29.63, 2.20, 5.0)
+﻿
 local globalData
+
+local RelativePosition = Vector(-0.31, 2.00, -15.00) - Vector(-0.31, 0.96, -19.79)
+local Scale = Vector(29.63, 2.20, 5.0)
+
+local cardZoneScale = Vector(3.33, 3.00, 4.64)
+
+
+local snapPointDistance = 2.43054628
 
 function Callback.OnSetup()
   globalData = Shared(Global)
@@ -8,7 +15,8 @@ function Callback.OnSetup()
   SetIsPlayingGame()
   
   if shared.isPlayingGame then
-    SpawnCourtZone()
+    shared.courtZones = {}
+    Method.ExpandCourtZones()
   end
 end
 
@@ -71,62 +79,111 @@ function SetIsPlayingGame()
   else
     shared.isPlayingGame = seatedColors[shared.playerColor]
   end
-  
-  
 end
 
-function SpawnCourtZone()
+function HasCard(container)
+  for _, object in ipairs(container.getObjects(true)) do
+    if object.type == 'Card' then
+      return true
+    end
+  end
+  return false
+end
+
+function Method.ExpandCourtZones()
+  local bFixEvenCentering = true
+  if #shared.courtZones == 0 then
+    SpawnCourtZone(false, bFixEvenCentering)
+    bFixEvenCentering = false
+  else
+    if HasCard(shared.courtZones[1]) then
+      SpawnCourtZone(true, bFixEvenCentering)
+      bFixEvenCentering = false
+    end
+    if HasCard(shared.courtZones[#shared.courtZones]) then
+      SpawnCourtZone(false, bFixEvenCentering)
+      bFixEvenCentering = false
+    end
+  end
+  CenterCourtZones()
+end
+
+function CenterCourtZones()
+  local averagePosition = Vector(0, 0, 0)
+  for _, zone in ipairs(shared.courtZones) do
+    averagePosition = averagePosition + zone.getPosition()
+  end
+  averagePosition.x = averagePosition.x / #shared.courtZones
+  averagePosition.y = averagePosition.y / #shared.courtZones
+  averagePosition.z = averagePosition.z / #shared.courtZones
+  local moveVector = Vector(shared.courtCenter) - averagePosition
+  
+  for _, zone in ipairs(shared.courtZones) do
+    for _, object in ipairs(zone.getObjects(true)) do
+      if object.locked == false then
+        object.setPositionSmooth(object.getPosition() + moveVector, false, false)
+      end
+    end
+    zone.setPositionSmooth(zone.getPosition() + moveVector, false, false)
+  end
+end
+
+---@param bInsertBeginning boolean | nil
+function SpawnCourtZone(bInsertBeginning, bFixEvenCentering)
+
   local rotation = owner.getRotation()
   rotation.y = rotation.y - 180
-  local TranslationVector = RelativePosition
-  TranslationVector:rotateOver('y', rotation.y)
-  local position = owner.getPosition() + TranslationVector
   
+  local cardOffset = Vector(0, 0, 0)
+
+  if #shared.courtZones > 0 then
+    local count = math.ceil(#shared.courtZones / 2.0)
+    if #shared.courtZones % 2 == 0 and bFixEvenCentering then
+      count = count + 0.5
+    end
+    if bInsertBeginning then
+      cardOffset.x = -(cardZoneScale.x) * count
+    else
+      cardOffset.x = cardZoneScale.x * count
+    end
+  end
+  
+  local translationVector = RelativePosition + cardOffset
+  translationVector:rotateOver('y', rotation.y)
+  local position = owner.getPosition() + translationVector
+
   -- slightly nudge red and orange zones so they fit
   if shared.playerColor == 'Red' or shared.playerColor == 'Orange' then
     position.z = position.z + 2.6
   end
 
+  if #shared.courtZones == 0 then
+    shared.courtCenter = position
+  end
+  
+  ---@type tts__SpawnObjectDataParams
   local ObjectParameters = {
     position = position,
     rotation = rotation,
-    scale = Scale,
-    json = [[{
-      "Name": "LayoutZone",
-      "Transform": {"posX": 0.0, "posY": 0.0, "posZ": 0.0, "rotX": 0.0, "rotY": 0.0, "rotZ": 0.0, "scaleX": 1.0, "scaleY": 1.0, "scaleZ": 1.0},
-      "Locked": true,
-      "LayoutZone": {
-        "Options": {
-          "Direction": 0,
-          "MeldDirection": 0,
-          "NewObjectFacing": 1,
-          "TriggerForFaceUp": true,
-          "TriggerForFaceDown": true,
-          "TriggerForNonCards": false,
-          "AllowSwapping": true,
-          "MaxObjectsPerNewGroup": 1,
-          "MaxObjectsPerGroup": 1,
-          "MeldSort": 1,
-          "MeldReverseSort": false,
-          "MeldSortExisting": false,
-          "StickyCards": false,
-          "HorizontalSpread": 0.6,
-          "VerticalSpread": 0.0,
-          "HorizontalGroupPadding": 0.0,
-          "VerticalGroupPadding": 0.0,
-          "SplitAddedDecks": true,
-          "CombineIntoDecks": false,
-          "CardsPerDeck": 0,
-          "AlternateDirection": false,
-          "Randomize": false,
-          "InstantRefill": false,
-          "ManualOnly": false
-        },
-        "GroupsInZone": [
-          []
-        ]
-      }
-    }]]
+    scale = cardZoneScale * 0.9,
+
+    data = {
+      Name = "ScriptingTrigger",
+      Transform = {posX = 0.0, posY = 0.0, posZ = 0.0, rotX = 0.0, rotY = 0.0, rotZ = 0.0, scaleX = 1.0, scaleY = 1.0, scaleZ = 1.0},
+      Locked = true,
+      AttachedSnapPoints = {
+        {
+          Position = { 0.00, -0.5, 0.00 },
+          Rotation = { 0.00, 180.0, 0.00 },
+        }
+      },
+      Tags = {shared.playerColor, 'CourtZone'}
+    }
   }
-  shared.courtZone = spawnObjectJSON(ObjectParameters)
+  if bInsertBeginning then
+    table.insert(shared.courtZones, 1, spawnObjectData(ObjectParameters))
+  else
+    table.insert(shared.courtZones, spawnObjectData(ObjectParameters))
+  end
+  
 end
