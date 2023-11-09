@@ -102,6 +102,8 @@ function onObjectSpawn(card)
   if not data then
     return -- not a court card
   end
+
+  card.addTag('CourtCard')
   
   local actionCount = #data.actions
   if actionCount == 0 then

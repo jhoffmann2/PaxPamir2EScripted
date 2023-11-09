@@ -31,10 +31,3 @@ function Callback.OnSetup()
     shared.favoredSuitZones[suit] = spawnObject(objectParameters)
   end
 end
-
-function onObjectDrop(colorName, object)
-  if object.guid == owner.guid then
-
-    
-  end
-end

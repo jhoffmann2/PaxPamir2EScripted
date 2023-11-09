@@ -6,7 +6,6 @@ local Scale = Vector(29.63, 2.20, 5.0)
 
 local cardZoneScale = Vector(3.33, 3.00, 4.64)
 
-
 local snapPointDistance = 2.43054628
 
 function Callback.OnSetup()
@@ -81,15 +80,70 @@ function SetIsPlayingGame()
   end
 end
 
-function HasCard(container)
+function HasCard(container, optional_card)
   for _, object in ipairs(container.getObjects(true)) do
-    if object.type == 'Card' then
-      return true
+    if object.hasTag('CourtCard') then
+      if optional_card == nil or optional_card.guid == object.guid then
+        return true
+      end
     end
   end
   return false
 end
 
+-- shift cards to fill gaps in the court
+function Method.ShrinkCourtZones()
+  
+  function FindEmptyZone()
+    if #shared.courtZones == 2 then
+      if (not HasCard(shared.courtZones[2])) then
+        return 2
+      end
+    end
+    
+    -- ignore first and last zone since those should be empty
+    for i = 2, #shared.courtZones - 1 do
+      if (not HasCard(shared.courtZones[i])) then
+        return i
+      end
+    end
+    return nil
+  end
+
+  -- continue removing empty zones until there are none
+  while true do
+    local index = FindEmptyZone()
+    if index == nil then
+      return
+    end
+    
+    RemoveZone(index)
+  end
+  
+end
+
+function RemoveZone(index)
+  local destinations = {}
+  local averagePosition = Vector(0, 0, 0)
+  for i = 1, #shared.courtZones - 1 do
+    table.insert(destinations, shared.courtZones[i].getPosition())
+    averagePosition = averagePosition + destinations[#destinations]
+  end
+  
+  destroyObject(shared.courtZones[index])
+  table.remove(shared.courtZones, index)
+  
+  averagePosition.x = averagePosition.x / #shared.courtZones
+  averagePosition.y = averagePosition.y / #shared.courtZones
+  averagePosition.z = averagePosition.z / #shared.courtZones
+  local centerShift = Vector(shared.courtCenter) - averagePosition
+  
+  for i, courtZone in ipairs(shared.courtZones) do
+    SmoothMoveZone(courtZone, destinations[i] + centerShift, false, false)
+  end
+end
+
+-- if an edge slot in the court is filled, add a new slot after it and center the court
 function Method.ExpandCourtZones()
   local bFixEvenCentering = true
   if #shared.courtZones == 0 then
@@ -105,10 +159,20 @@ function Method.ExpandCourtZones()
       bFixEvenCentering = false
     end
   end
-  CenterCourtZones()
+  CenterCourtZone()
 end
 
-function CenterCourtZones()
+-- move zone and all it's contents
+function SmoothMoveZone(zone, position, collide, fast)
+  local moveVector = position - zone.getPosition();
+  
+  for _, object in ipairs(zone.getObjects(true)) do
+    object.setPositionSmooth(object.getPosition() + moveVector, collide, fast)
+  end
+  zone.setPositionSmooth(position, collide, fast)
+end
+
+function CenterCourtZone()
   local averagePosition = Vector(0, 0, 0)
   for _, zone in ipairs(shared.courtZones) do
     averagePosition = averagePosition + zone.getPosition()
@@ -119,12 +183,7 @@ function CenterCourtZones()
   local moveVector = Vector(shared.courtCenter) - averagePosition
   
   for _, zone in ipairs(shared.courtZones) do
-    for _, object in ipairs(zone.getObjects(true)) do
-      if object.locked == false then
-        object.setPositionSmooth(object.getPosition() + moveVector, false, false)
-      end
-    end
-    zone.setPositionSmooth(zone.getPosition() + moveVector, false, false)
+    SmoothMoveZone(zone, zone.getPosition() + moveVector, false, false)
   end
 end
 
@@ -175,6 +234,7 @@ function SpawnCourtZone(bInsertBeginning, bFixEvenCentering)
         {
           Position = { 0.00, -0.5, 0.00 },
           Rotation = { 0.00, 180.0, 0.00 },
+          Tags = {"CourtCard"}
         }
       },
       Tags = {shared.playerColor, 'CourtZone'}
