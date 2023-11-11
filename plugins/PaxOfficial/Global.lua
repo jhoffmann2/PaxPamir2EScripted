@@ -607,6 +607,8 @@ function pickRandomStartPlayer()
   local randomPlayerindex = math.random(1, #seatedPlayers)
   local startColor = seatedPlayers[randomPlayerindex]
 
+  Turns.enable = true
+  Turns.turn_color = startColor
   printToAll("\n\nThe " .. startColor .. " player was randomly chosen to go first.\n\n", startColor)
 end
 
@@ -807,6 +809,24 @@ function raiseScriptZones()
       zone.setPosition({ zonePosition.x, 1.500, zonePosition.z })
     end
   end
+end
+
+function onObjectSpawn(card)
+  if card.type ~= 'Card' then
+    return
+  end
+
+  local cardId = card.getData().CardID
+  if not cardId then
+    return
+  end
+
+  local data = shared.courtCards[cardId]
+  if not data then
+    return -- not a court card
+  end
+
+  card.addTag('CourtCard')
 end
 
 function onObjectDrop(playerColor, droppedObject)

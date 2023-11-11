@@ -102,8 +102,6 @@ function onObjectSpawn(card)
   if not data then
     return -- not a court card
   end
-
-  card.addTag('CourtCard')
   
   local actionCount = #data.actions
   if actionCount == 0 then
@@ -152,6 +150,24 @@ end
 
 function OnActionButtonClicked3(card, color, alt_click)
   OnActionButtonClicked(2,card,color,alt_click)
+end
+
+function onPlayerTurn(player, previousPlayer)
+  -- clear all the buttons
+  for _, card in ipairs(getObjectsWithTag('CourtCard')) do
+
+    local cardId = card.getData().CardID
+    if cardId then
+      local data = globalData.courtCards[cardId]
+      if data then
+        local actionCount = #data.actions
+
+        for buttonIndex = 0, actionCount - 1 do
+          card.editButton({ index = buttonIndex, color = { 0, 0, 0, 0}})
+        end
+      end
+    end
+  end
 end
 
 function OnActionButtonClicked(buttonIndex, card, color, alt_click)

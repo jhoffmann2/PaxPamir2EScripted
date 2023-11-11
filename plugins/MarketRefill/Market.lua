@@ -11,6 +11,11 @@ function Callback.OnSetup()
   owner.addContextMenuItem('Fill Market', OnFillMarket)
 end
 
+
+function onPlayerTurn(player, previousPlayer)
+  OnFillMarket()
+end
+
 function OnFillMarket()
 
   ---@type tts__ScriptingTrigger[]

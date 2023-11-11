@@ -3,7 +3,13 @@
   "Pax Pamir 2nd Edition Official": { "type": "toggle", "hidden": true, "value": true, "plugin": "PaxOfficial" },
   "Card Data": { "type": "toggle", "hidden": true, "value": true, "plugin": "CardData" },
   "PlayerCoinLayout": { "type": "toggle", "hidden": true, "value": true, "plugin": "PlayerCoinLayout" },
-  "PlayerCourt": { "type": "toggle", "hidden": true, "value": true, "plugin": "PlayerCourt" },
+  
+  "Player Court": { 
+    "type": "toggle", 
+    "hidden": false, 
+    "value": true, 
+    "plugin": "PlayerCourt"
+  },
 
   "Market Refill": {
     "type": "toggle",

@@ -3,25 +3,12 @@
   "Board Game": 
   {
     "Game": "Cole Wehrle",
-    "Art": "Kyle Ferrin",
-    "Studio": "Leder Games",
-    "Realistic Component Models": "AngryPony"
-  },
-
-  "Custom Cards": {
-    "Naysayers": "The Naysayers",
-    "Legends": "DomV"
+    "Studio": "WEHRLEGIG"
   },
 
   "Scripting": {
     "Engine": "Jordan Hoffmann",
     "Base Game": "AgentElrond",
-    "Turn Order Seating": "Jordan Hoffmann",
-    "Randomized Turn Order": "Jordan Hoffmann",
-    "Smart Warbands": "Jordan Hoffmann",
-    "Auto Rest": "Jordan Hoffmann",
-    "Auto Tavern Songs": "Jordan Hoffmann",
-    "Round Counter": "Jordan Hoffmann",
-    "Forced Card Restrictions": "Jordan Hoffmann"
+    "Automation": "Jordan Hoffmann"
   }
 }
